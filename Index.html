@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>CRIE:CODE ESCORSIN</title>
+
+  <script src="https://unpkg.com/blockly/blockly_compressed.js"></script>
+  <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #20242d;
+      color: white;
+    }
+
+    header {
+      padding: 14px;
+      background: #292f3b;
+      border-bottom: 2px solid #7ce7c1;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 21px;
+    }
+
+    header p {
+      margin: 5px 0 0;
+      color: #b9c4d2;
+      font-size: 13px;
+    }
+
+    #blocklyDiv {
+      height: 62vh;
+      min-height: 300px;
+      width: 100%;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 6px;
+      border: 0;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    #run {
+      background: #7ce7c1;
+      color: #163b31;
+    }
+
+    #reset {
+      background: #414957;
+      color: white;
+    }
+
+    #output {
+      margin: 0 12px 12px;
+      padding: 12px;
+      min-height: 65px;
+      border-radius: 9px;
+      background: #292f3b;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .label {
+      padding: 0 12px 8px;
+      color: #b9c4d2;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>CRIE:CODE ESCORSIN</h1>
+    <p>0.1 BETA · Programação por blocos</p>
+  </header>
+
+  <div id="blocklyDiv"></div>
+
+  <div class="controls">
+    <button id="run">▶ EXECUTAR</button>
+    <button id="reset">↻ REINICIAR</button>
+  </div>
+
+  <div class="label">SAÍDA DO PROGRAMA</div>
+  <div id="output">Pronto para programar!</div>
+
+  <xml id="toolbox" style="display:none">
+    <category name="INFORMAÇÕES"
+              colour="#686E78">
+      <block type="crie_iniciar"></block>
+      <block type="crie_texto"></block>
+      <block type="crie_numero"></block>
+    </category>
+  </xml>
+
+  <script>
+    // BLOCO 1: INÍCIO DO PROGRAMA
+    Blockly.Blocks['crie_iniciar'] = {
+      init: function() {
+        this.appendDummyInput()
+          .appendField("quando iniciar");
+        this.setNextStatement(true);
+        this.setColour("#686E78");
+        this.setTooltip("Ponto inicial do programa");
+      }
+    };
+
+    // BLOCO 2: MOSTRAR TEXTO
+    Blockly.Blocks['crie_texto'] = {
+      init: function() {
+        this.appendDummyInput()
+          .appendField("mostrar texto")
+          .appendField(
+            new Blockly.FieldTextInput("Olá, mundo!"),
+            "TEXTO"
+          );
+        this.setPreviousStatement(true);
+        this.setNextStatement(true);
+        this.setColour("#686E78");
+      }
+    };
+
+    // BLOCO 3: MOSTRAR NÚMERO
+    Blockly.Blocks['crie_numero'] = {
+      init: function() {
+        this.appendDummyInput()
+          .appendField("mostrar número")
+          .appendField(
+            new Blockly.FieldNumber(123),
+            "NUMERO"
+          );
+        this.setPreviousStatement(true);
+        this.setNextStatement(true);
+        this.setColour("#686E78");
+      }
+    };
+
+    // CRIAR O EDITOR
+    const workspace = Blockly.inject("blocklyDiv", {
+      toolbox: document.getElementById("toolbox"),
+      media: "https://unpkg.com/blockly/media/",
+      trashcan: true,
+      sounds: false,
+      zoom: {
+        controls: true,
+        wheel: true,
+        startScale: 0.9,
+        maxScale: 1.5,
+        minScale: 0.5,
+        scaleSpeed: 1.2
+      },
+      move: {
+        scrollbars: true,
+        drag: true,
+        wheel: true
+      }
+    });
+
+    const output = document.getElementById("output");
+
+    // EXECUTAR NOSSO PRIMEIRO PROGRAMA
+    document.getElementById("run").onclick = function() {
+      output.textContent = "";
+
+      const starts = workspace.getTopBlocks(true)
+        .filter(block =>
+          block.type === "crie_iniciar"
+        );
+
+      if (starts.length === 0) {
+        output.textContent =
+          "Adicione o bloco 'quando iniciar'!";
+        return;
+      }
+
+      let lines = 0;
+
+      for (const start of starts) {
+        let block = start.getNextBlock();
+        let safety = 0;
+
+        while (block && safety < 500) {
+          safety++;
+          lines++;
+
+          if (block.type === "crie_texto") {
+            output.textContent +=
+              block.getFieldValue("TEXTO") + "\n";
+          }
+
+          if (block.type === "crie_numero") {
+            output.textContent +=
+              block.getFieldValue("NUMERO") + "\n";
+          }
+
+          block = block.getNextBlock();
+        }
+      }
+
+      if (lines === 0) {
+        output.textContent =
+          "Programa executado! Adicione blocos abaixo do início.";
+      }
+    };
+
+    // LIMPAR O EDITOR
+    document.getElementById("reset").onclick = function() {
+      workspace.clear();
+      output.textContent = "Editor reiniciado!";
+    };
+
+    // MONTAR UM EXEMPLO INICIAL
+    const start = workspace.newBlock("crie_iniciar");
+    start.initSvg();
+    start.render();
+    start.moveBy(40, 40);
+
+    const message = workspace.newBlock("crie_texto");
+    message.initSvg();
+    message.render();
+
+    start.nextConnection.connect(message.previousConnection);
+  </script>
+</body>
+</html>
